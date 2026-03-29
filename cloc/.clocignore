@@ -1,0 +1,9 @@
+node_modules
+dist
+.svelte-kit
+*.min.js
+*.lock
+package-lock.json
+results
+*.json
+thesis-data

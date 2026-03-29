@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stock Ticker — HDA (HTMX)</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Stock Ticker</h1>
+    <span class="badge">HDA · HTMX</span>
+    <div id="status">
+      <span id="status-dot"></span>
+      <span id="status-text">Connecting…</span>
+    </div>
+  </header>
+
+  <main>
+    <div class="table-wrap">
+      <table id="stock-table">
+        <thead>
+          <tr>
+            <th>Symbol</th>
+            <th>Price</th>
+            <th>Change</th>
+            <th>Volume</th>
+          </tr>
+        </thead>
+        <tbody id="stocks">
+          <!-- Populated by ws-connect.js via GET /api/snapshot/html -->
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!--
+    Hidden sink: incoming WS HTML snippets are injected here so that
+    HTMX's hx-swap-oob mechanism can locate and replace the target rows.
+    The sink itself is never visible to the user.
+  -->
+  <div id="oob-sink" hidden aria-hidden="true"></div>
+
+  <script src="/htmx.min.js"></script>
+  <script src="/ws-connect.js"></script>
+</body>
+</html>

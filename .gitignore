@@ -1,0 +1,10 @@
+node_modules/
+app-hda/public/htmx.min.js
+dist/
+.svelte-kit/
+*.env
+thesis-data/
+load-tests/k6/results/*.json
+measurement/results/*.json
+measurement/results/*.csv
+measurement/results/*.md

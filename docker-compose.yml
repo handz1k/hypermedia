@@ -1,0 +1,105 @@
+services:
+  backend:
+    build: ./backend
+    container_name: ticker-backend
+    environment:
+      - STOCK_COUNT=${STOCK_COUNT:-50}
+      - UPDATE_INTERVAL_MS=${UPDATE_INTERVAL_MS:-250}
+      - VOLATILITY=${VOLATILITY:-0.008}
+      - DRIFT=${DRIFT:-0.0001}
+      - APP_PORT=3000
+      - METRICS_PORT=9091
+    ports:
+      - "3000:3000"
+      - "9091:9091"
+    networks:
+      - ticker-net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  app-hda:
+    build: ./app-hda
+    container_name: ticker-hda
+    ports:
+      - "8080:80"
+    volumes:
+      - ./app-hda/public:/usr/share/nginx/html:ro
+    networks:
+      - ticker-net
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  app-spa:
+    build: ./app-spa
+    container_name: ticker-spa
+    ports:
+      - "8081:80"
+    networks:
+      - ticker-net
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: ticker-prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=7d"
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - ticker-net
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  grafana:
+    image: grafana/grafana:10.4.0
+    container_name: ticker-grafana
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    networks:
+      - ticker-net
+    depends_on:
+      - prometheus
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.0
+    container_name: ticker-cadvisor
+    privileged: true
+    ports:
+      - "8082:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    networks:
+      - ticker-net
+
+volumes:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  ticker-net:
+    driver: bridge
