@@ -1,7 +1,5 @@
 # HDA vs SPA
 
-Comparison of **Hypermedia-Driven Applications (HDA)** and **Single-Page Applications (SPA)** for real-time web development. Both apps display a live stock ticker fed by the same backend over WebSockets. The only variable is what travels over the wire and who renders the UI.
-
 | | App A — HDA | App B — SPA |
 |---|---|---|
 | Framework | HTMX | Svelte |
@@ -208,7 +206,7 @@ Client type is determined at the WebSocket handshake by the `Sec-WebSocket-Proto
 
 ### Fairness constraints
 
-These are enforced in code, not just documented:
+These are enforced in code:
 
 - **One frame per tick** — both broadcasters send exactly one WS frame per engine tick regardless of how many stocks changed.
 - **Same starting state** — both apps call `GET /api/snapshot` before opening their WebSocket. A `tickLock` flag prevents a tick from firing mid-snapshot.
