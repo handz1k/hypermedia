@@ -1,6 +1,6 @@
-# HDA vs SPA — Stock ticker
+# HDA vs SPA
 
-Empirical comparison of **Hypermedia-Driven Applications (HDA)** and **Single-Page Applications (SPA)** for real-time web development. Both apps display a live stock ticker fed by the same backend over WebSockets. The only variable is what travels over the wire and who renders the UI.
+Comparison of **Hypermedia-Driven Applications (HDA)** and **Single-Page Applications (SPA)** for real-time web development. Both apps display a live stock ticker fed by the same backend over WebSockets. The only variable is what travels over the wire and who renders the UI.
 
 | | App A — HDA | App B — SPA |
 |---|---|---|
@@ -28,7 +28,7 @@ brew install k6 cloc node
 
 ---
 
-## Quickstart — Just run the apps
+## Quickstart
 
 ```bash
 # 1. Copy and optionally edit environment variables
@@ -47,7 +47,7 @@ cp .env.example .env
 | cAdvisor | http://localhost:8082 | Container CPU/memory |
 | Backend API | http://localhost:3000 | REST + WebSocket server |
 
-Open both apps side by side. They should look identical and update in sync — this is the fairness baseline for the experiment.
+Open both apps side by side. They should look identical and update in sync, this is the fairness baseline.
 
 ---
 
@@ -200,38 +200,11 @@ On each tick the engine emits a `tick` event with an array of all updated stocks
 
 ### WebSocket routing
 
-Client type is determined at the WebSocket handshake by the `Sec-WebSocket-Protocol` header — no separate URLs needed:
+Client type is determined at the WebSocket handshake by the `Sec-WebSocket-Protocol` header:
 
 - `hda-ticker` → HDA broadcaster → HTML snippets
 - `spa-ticker` → SPA broadcaster → JSON
 
-### What travels over the wire
-
-**HDA — one frame per tick, all changed rows concatenated:**
-```html
-<tr id="row-AAPL" hx-swap-oob="true">
-  <td class="symbol">AAPL</td>
-  <td class="price up">182.34</td>
-  <td class="change up">+0.23%</td>
-  <td class="volume">1,204,321</td>
-</tr>
-<tr id="row-MSFT" hx-swap-oob="true">...
-```
-
-HTMX reads `hx-swap-oob="true"` and replaces the matching `id` in the DOM with no JavaScript logic needed in the app.
-
-**SPA — one frame per tick, all stocks as a JSON array:**
-```json
-{
-  "ts": 1711700000000,
-  "ticks": [
-    { "symbol": "AAPL", "price": 182.34, "prev": 181.92, "change": 0.0023, "volume": 1204321 },
-    ...
-  ]
-}
-```
-
-The Svelte store updates the reactive `Map<symbol, StockState>` and Svelte re-renders only the changed rows.
 
 ### Fairness constraints
 
