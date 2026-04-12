@@ -1,0 +1,162 @@
+[
+  {
+    "app": "hda-stable",
+    "url": "http://localhost:8080",
+    "startedAt": "2026-04-12T22:10:16.097Z",
+    "fps": {
+      "mean": 30.000004559376258,
+      "p50": 30.030030030027405,
+      "p95": 30.86419753086281,
+      "min": 14.814814814814815,
+      "max": 31.05590062112082,
+      "sampleCount": 1798
+    },
+    "heapSnapshots": [
+      {
+        "label": "t0",
+        "jsHeapUsedMb": 3,
+        "jsHeapTotalMb": 6.38,
+        "domNodeCount": 278
+      },
+      {
+        "label": "steady",
+        "jsHeapUsedMb": 2.94,
+        "jsHeapTotalMb": 6.13,
+        "domNodeCount": 278
+      },
+      {
+        "label": "final",
+        "jsHeapUsedMb": 0.96,
+        "jsHeapTotalMb": 6.13,
+        "domNodeCount": 278
+      }
+    ],
+    "paint": {
+      "layoutCount": 239,
+      "styleRecalcCount": 1435,
+      "scriptDurationMs": 5894.49,
+      "taskDurationMs": 13075.85,
+      "layoutDurationMs": 543.21
+    }
+  },
+  {
+    "app": "spa",
+    "url": "http://localhost:8081",
+    "startedAt": "2026-04-12T22:11:33.083Z",
+    "fps": {
+      "mean": 30.008487712899683,
+      "p50": 30.030030030027405,
+      "p95": 30.86419753086281,
+      "min": 28.985507246376812,
+      "max": 31.05590062111731,
+      "sampleCount": 1801
+    },
+    "heapSnapshots": [
+      {
+        "label": "t0",
+        "jsHeapUsedMb": 2.49,
+        "jsHeapTotalMb": 5.13,
+        "domNodeCount": 275
+      },
+      {
+        "label": "steady",
+        "jsHeapUsedMb": 1.94,
+        "jsHeapTotalMb": 3.63,
+        "domNodeCount": 275
+      },
+      {
+        "label": "final",
+        "jsHeapUsedMb": 1.82,
+        "jsHeapTotalMb": 3.63,
+        "domNodeCount": 275
+      }
+    ],
+    "paint": {
+      "layoutCount": 240,
+      "styleRecalcCount": 1439,
+      "scriptDurationMs": 401.64,
+      "taskDurationMs": 5424.5,
+      "layoutDurationMs": 519.43
+    }
+  },
+  {
+    "app": "hda-beta",
+    "url": "http://localhost:8082",
+    "startedAt": "2026-04-12T22:12:50.109Z",
+    "fps": {
+      "mean": 29.999339323125515,
+      "p50": 30.030030030027405,
+      "p95": 30.86419753086281,
+      "min": 15.08295625942784,
+      "max": 31.05590062112082,
+      "sampleCount": 1798
+    },
+    "heapSnapshots": [
+      {
+        "label": "t0",
+        "jsHeapUsedMb": 1.32,
+        "jsHeapTotalMb": 3.38,
+        "domNodeCount": 278
+      },
+      {
+        "label": "steady",
+        "jsHeapUsedMb": 1.44,
+        "jsHeapTotalMb": 3.63,
+        "domNodeCount": 278
+      },
+      {
+        "label": "final",
+        "jsHeapUsedMb": 2.27,
+        "jsHeapTotalMb": 3.88,
+        "domNodeCount": 278
+      }
+    ],
+    "paint": {
+      "layoutCount": 240,
+      "styleRecalcCount": 1436,
+      "scriptDurationMs": 3748.63,
+      "taskDurationMs": 14338.1,
+      "layoutDurationMs": 544.1
+    }
+  },
+  {
+    "app": "hda-sse",
+    "url": "http://localhost:8083",
+    "startedAt": "2026-04-12T22:14:07.098Z",
+    "fps": {
+      "mean": 30.000610095059262,
+      "p50": 30.030030030027405,
+      "p95": 30.86419753086281,
+      "min": 14.814814814814815,
+      "max": 31.05590062112082,
+      "sampleCount": 1798
+    },
+    "heapSnapshots": [
+      {
+        "label": "t0",
+        "jsHeapUsedMb": 1.33,
+        "jsHeapTotalMb": 3.38,
+        "domNodeCount": 278
+      },
+      {
+        "label": "steady",
+        "jsHeapUsedMb": 1.52,
+        "jsHeapTotalMb": 3.38,
+        "domNodeCount": 278
+      },
+      {
+        "label": "final",
+        "jsHeapUsedMb": 1.4,
+        "jsHeapTotalMb": 4.13,
+        "domNodeCount": 278
+      }
+    ],
+    "paint": {
+      "layoutCount": 239,
+      "styleRecalcCount": 1438,
+      "scriptDurationMs": 40.51,
+      "taskDurationMs": 13979.94,
+      "layoutDurationMs": 537.25
+    }
+  }
+]

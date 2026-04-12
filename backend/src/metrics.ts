@@ -8,6 +8,12 @@ export const wsConnections = new promClient.Gauge({
   labelNames: ['client_type'] as const,
 });
 
+export const sseConnections = new promClient.Gauge({
+  name: 'ticker_sse_connections_total',
+  help: 'Current live SSE connections',
+  labelNames: ['client_type'] as const,
+});
+
 export const messagesSent = new promClient.Counter({
   name: 'ticker_messages_sent_total',
   help: 'Total WebSocket messages sent',

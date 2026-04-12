@@ -21,21 +21,12 @@
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
       "targets": [
-        {
-          "expr": "ticker_ws_connections_total{client_type=\"hda\"}",
-          "legendFormat": "HDA connections",
-          "refId": "A"
-        },
-        {
-          "expr": "ticker_ws_connections_total{client_type=\"spa\"}",
-          "legendFormat": "SPA connections",
-          "refId": "B"
-        }
+        { "expr": "ticker_ws_connections_total{client_type=\"hda-v2\"}", "legendFormat": "HDA Stable (htmx 2.x)", "refId": "A" },
+        { "expr": "ticker_ws_connections_total{client_type=\"hda-v4\"}", "legendFormat": "HDA Beta (htmx 4.x WS)", "refId": "B" },
+        { "expr": "ticker_ws_connections_total{client_type=\"spa\"}",   "legendFormat": "SPA", "refId": "C" },
+        { "expr": "ticker_sse_connections_total{client_type=\"sse-rows\"}", "legendFormat": "HDA SSE", "refId": "D" }
       ],
-      "fieldConfig": {
-        "defaults": { "unit": "short", "custom": { "lineWidth": 2 } },
-        "overrides": []
-      }
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "lineWidth": 2 } }, "overrides": [] }
     },
     {
       "id": 2,
@@ -44,16 +35,10 @@
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
       "targets": [
-        {
-          "expr": "rate(ticker_messages_sent_total{client_type=\"hda\"}[1m])",
-          "legendFormat": "HDA msg/s",
-          "refId": "A"
-        },
-        {
-          "expr": "rate(ticker_messages_sent_total{client_type=\"spa\"}[1m])",
-          "legendFormat": "SPA msg/s",
-          "refId": "B"
-        }
+        { "expr": "rate(ticker_messages_sent_total{client_type=\"hda-v2\"}[1m])",   "legendFormat": "HDA Stable msg/s", "refId": "A" },
+        { "expr": "rate(ticker_messages_sent_total{client_type=\"hda-v4\"}[1m])",   "legendFormat": "HDA Beta msg/s",   "refId": "B" },
+        { "expr": "rate(ticker_messages_sent_total{client_type=\"spa\"}[1m])",      "legendFormat": "SPA msg/s",        "refId": "C" },
+        { "expr": "rate(ticker_messages_sent_total{client_type=\"sse-rows\"}[1m])", "legendFormat": "HDA SSE msg/s",    "refId": "D" }
       ],
       "fieldConfig": { "defaults": { "unit": "ops" }, "overrides": [] }
     },
@@ -64,66 +49,42 @@
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
       "targets": [
-        {
-          "expr": "rate(ticker_message_bytes_total{client_type=\"hda\"}[1m])",
-          "legendFormat": "HDA bytes/s",
-          "refId": "A"
-        },
-        {
-          "expr": "rate(ticker_message_bytes_total{client_type=\"spa\"}[1m])",
-          "legendFormat": "SPA bytes/s",
-          "refId": "B"
-        }
+        { "expr": "rate(ticker_message_bytes_total{client_type=\"hda-v2\"}[1m])",   "legendFormat": "HDA Stable bytes/s", "refId": "A" },
+        { "expr": "rate(ticker_message_bytes_total{client_type=\"hda-v4\"}[1m])",   "legendFormat": "HDA Beta bytes/s",   "refId": "B" },
+        { "expr": "rate(ticker_message_bytes_total{client_type=\"spa\"}[1m])",      "legendFormat": "SPA bytes/s",        "refId": "C" },
+        { "expr": "rate(ticker_message_bytes_total{client_type=\"sse-rows\"}[1m])", "legendFormat": "HDA SSE bytes/s",    "refId": "D" }
       ],
       "fieldConfig": { "defaults": { "unit": "Bps" }, "overrides": [] }
     },
     {
       "id": 4,
-      "title": "Message Size Distribution (p50/p95/p99)",
+      "title": "Message Size Distribution (p50 / p95)",
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
       "targets": [
-        {
-          "expr": "histogram_quantile(0.50, rate(ticker_message_size_bytes_bucket{client_type=\"hda\"}[5m]))",
-          "legendFormat": "HDA p50",
-          "refId": "A"
-        },
-        {
-          "expr": "histogram_quantile(0.95, rate(ticker_message_size_bytes_bucket{client_type=\"hda\"}[5m]))",
-          "legendFormat": "HDA p95",
-          "refId": "B"
-        },
-        {
-          "expr": "histogram_quantile(0.50, rate(ticker_message_size_bytes_bucket{client_type=\"spa\"}[5m]))",
-          "legendFormat": "SPA p50",
-          "refId": "C"
-        },
-        {
-          "expr": "histogram_quantile(0.95, rate(ticker_message_size_bytes_bucket{client_type=\"spa\"}[5m]))",
-          "legendFormat": "SPA p95",
-          "refId": "D"
-        }
+        { "expr": "histogram_quantile(0.50, rate(ticker_message_size_bytes_bucket{client_type=\"hda-v2\"}[5m]))",   "legendFormat": "HDA Stable p50", "refId": "A" },
+        { "expr": "histogram_quantile(0.95, rate(ticker_message_size_bytes_bucket{client_type=\"hda-v2\"}[5m]))",   "legendFormat": "HDA Stable p95", "refId": "B" },
+        { "expr": "histogram_quantile(0.50, rate(ticker_message_size_bytes_bucket{client_type=\"hda-v4\"}[5m]))",   "legendFormat": "HDA Beta p50",   "refId": "C" },
+        { "expr": "histogram_quantile(0.95, rate(ticker_message_size_bytes_bucket{client_type=\"hda-v4\"}[5m]))",   "legendFormat": "HDA Beta p95",   "refId": "D" },
+        { "expr": "histogram_quantile(0.50, rate(ticker_message_size_bytes_bucket{client_type=\"spa\"}[5m]))",      "legendFormat": "SPA p50",        "refId": "E" },
+        { "expr": "histogram_quantile(0.95, rate(ticker_message_size_bytes_bucket{client_type=\"spa\"}[5m]))",      "legendFormat": "SPA p95",        "refId": "F" },
+        { "expr": "histogram_quantile(0.50, rate(ticker_message_size_bytes_bucket{client_type=\"sse-rows\"}[5m]))", "legendFormat": "HDA SSE p50",    "refId": "G" },
+        { "expr": "histogram_quantile(0.95, rate(ticker_message_size_bytes_bucket{client_type=\"sse-rows\"}[5m]))", "legendFormat": "HDA SSE p95",    "refId": "H" }
       ],
       "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] }
     },
     {
       "id": 5,
-      "title": "Encode Latency p95 (HTML render vs JSON.stringify)",
+      "title": "Encode Latency p95 (render time per tick)",
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
       "targets": [
-        {
-          "expr": "histogram_quantile(0.95, rate(ticker_encode_duration_ms_bucket{client_type=\"hda\"}[5m]))",
-          "legendFormat": "HDA encode p95 (ms)",
-          "refId": "A"
-        },
-        {
-          "expr": "histogram_quantile(0.95, rate(ticker_encode_duration_ms_bucket{client_type=\"spa\"}[5m]))",
-          "legendFormat": "SPA encode p95 (ms)",
-          "refId": "B"
-        }
+        { "expr": "histogram_quantile(0.95, rate(ticker_encode_duration_ms_bucket{client_type=\"hda-v2\"}[5m]))",   "legendFormat": "HDA Stable p95 (ms)", "refId": "A" },
+        { "expr": "histogram_quantile(0.95, rate(ticker_encode_duration_ms_bucket{client_type=\"hda-v4\"}[5m]))",   "legendFormat": "HDA Beta p95 (ms)",   "refId": "B" },
+        { "expr": "histogram_quantile(0.95, rate(ticker_encode_duration_ms_bucket{client_type=\"spa\"}[5m]))",      "legendFormat": "SPA p95 (ms)",        "refId": "C" },
+        { "expr": "histogram_quantile(0.95, rate(ticker_encode_duration_ms_bucket{client_type=\"sse-rows\"}[5m]))", "legendFormat": "HDA SSE p95 (ms)",    "refId": "D" }
       ],
       "fieldConfig": { "defaults": { "unit": "ms" }, "overrides": [] }
     },
@@ -134,11 +95,7 @@
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
       "targets": [
-        {
-          "expr": "histogram_quantile(0.95, rate(ticker_tick_duration_ms_bucket[5m]))",
-          "legendFormat": "tick p95 (ms)",
-          "refId": "A"
-        }
+        { "expr": "histogram_quantile(0.95, rate(ticker_tick_duration_ms_bucket[5m]))", "legendFormat": "tick p95 (ms)", "refId": "A" }
       ],
       "fieldConfig": { "defaults": { "unit": "ms" }, "overrides": [] }
     },
@@ -149,21 +106,11 @@
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
       "targets": [
-        {
-          "expr": "rate(container_cpu_usage_seconds_total{name=~\".*backend.*\"}[1m]) * 100",
-          "legendFormat": "Backend CPU %",
-          "refId": "A"
-        },
-        {
-          "expr": "rate(container_cpu_usage_seconds_total{name=~\".*app-hda.*\"}[1m]) * 100",
-          "legendFormat": "HDA nginx CPU %",
-          "refId": "B"
-        },
-        {
-          "expr": "rate(container_cpu_usage_seconds_total{name=~\".*app-spa.*\"}[1m]) * 100",
-          "legendFormat": "SPA nginx CPU %",
-          "refId": "C"
-        }
+        { "expr": "rate(container_cpu_usage_seconds_total{name=~\".*backend.*\"}[1m]) * 100",         "legendFormat": "Backend CPU %",        "refId": "A" },
+        { "expr": "rate(container_cpu_usage_seconds_total{name=~\".*hda-stable.*\"}[1m]) * 100",      "legendFormat": "HDA Stable nginx CPU %","refId": "B" },
+        { "expr": "rate(container_cpu_usage_seconds_total{name=~\"ticker-hda$\"}[1m]) * 100",         "legendFormat": "HDA Beta nginx CPU %", "refId": "C" },
+        { "expr": "rate(container_cpu_usage_seconds_total{name=~\".*hda-sse.*\"}[1m]) * 100",         "legendFormat": "HDA SSE nginx CPU %",  "refId": "D" },
+        { "expr": "rate(container_cpu_usage_seconds_total{name=~\".*app-spa.*\"}[1m]) * 100",         "legendFormat": "SPA nginx CPU %",      "refId": "E" }
       ],
       "fieldConfig": { "defaults": { "unit": "percent" }, "overrides": [] }
     },
@@ -174,27 +121,17 @@
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
       "targets": [
-        {
-          "expr": "container_memory_usage_bytes{name=~\".*backend.*\"}",
-          "legendFormat": "Backend mem",
-          "refId": "A"
-        },
-        {
-          "expr": "container_memory_usage_bytes{name=~\".*app-hda.*\"}",
-          "legendFormat": "HDA mem",
-          "refId": "B"
-        },
-        {
-          "expr": "container_memory_usage_bytes{name=~\".*app-spa.*\"}",
-          "legendFormat": "SPA mem",
-          "refId": "C"
-        }
+        { "expr": "container_memory_usage_bytes{name=~\".*backend.*\"}",    "legendFormat": "Backend mem",        "refId": "A" },
+        { "expr": "container_memory_usage_bytes{name=~\".*hda-stable.*\"}", "legendFormat": "HDA Stable mem",    "refId": "B" },
+        { "expr": "container_memory_usage_bytes{name=~\"ticker-hda$\"}",    "legendFormat": "HDA Beta mem",      "refId": "C" },
+        { "expr": "container_memory_usage_bytes{name=~\".*hda-sse.*\"}",    "legendFormat": "HDA SSE mem",       "refId": "D" },
+        { "expr": "container_memory_usage_bytes{name=~\".*app-spa.*\"}",    "legendFormat": "SPA mem",           "refId": "E" }
       ],
       "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] }
     }
   ],
   "schemaVersion": 38,
-  "tags": ["hda", "spa", "thesis"],
+  "tags": ["hda-stable", "hda-beta", "hda-sse", "spa", "thesis"],
   "templating": {
     "list": [
       {
@@ -214,5 +151,5 @@
   "timezone": "browser",
   "title": "HDA vs SPA — Stock Ticker Thesis",
   "uid": "hda-vs-spa-thesis",
-  "version": 1
+  "version": 2
 }

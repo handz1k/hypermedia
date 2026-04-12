@@ -21,11 +21,38 @@ services:
       retries: 10
       start_period: 10s
 
+  # HDA — htmx 2.x stable (htmx-ext-ws, ws-connect attribute)
+  app-hda-stable:
+    build: ./app-hda-stable
+    container_name: ticker-hda-stable
+    ports:
+      - "8080:80"
+    volumes:
+      - ./app-hda-stable/public:/usr/share/nginx/html:ro
+    networks:
+      - ticker-net
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  # SPA — client-side React/Svelte baseline
+  app-spa:
+    build: ./app-spa
+    container_name: ticker-spa
+    ports:
+      - "8081:80"
+    networks:
+      - ticker-net
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  # HDA — htmx 4.0.0-beta1 WS extension (hx-ws:connect attribute)
   app-hda:
     build: ./app-hda
     container_name: ticker-hda
     ports:
-      - "8080:80"
+      - "8082:80"
     volumes:
       - ./app-hda/public:/usr/share/nginx/html:ro
     networks:
@@ -34,11 +61,14 @@ services:
       backend:
         condition: service_healthy
 
-  app-spa:
-    build: ./app-spa
-    container_name: ticker-spa
+  # HDA — htmx 4.0.0-beta1 SSE extension (hx-sse:connect, no WebSocket)
+  app-hda-sse:
+    build: ./app-hda-sse
+    container_name: ticker-hda-sse
     ports:
-      - "8081:80"
+      - "8083:80"
+    volumes:
+      - ./app-hda-sse/public:/usr/share/nginx/html:ro
     networks:
       - ticker-net
     depends_on:
@@ -86,7 +116,7 @@ services:
     container_name: ticker-cadvisor
     privileged: true
     ports:
-      - "8082:8080"
+      - "8084:8080"
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro

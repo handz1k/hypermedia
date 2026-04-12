@@ -1,46 +1,72 @@
-import { StockState, StockTick } from './types.js';
+import { StockTick } from './types.js';
 
-function esc(s: string | number): string {
-  return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+// Helper to format raw floats into clean percentages
+function formatChange(change: number): string {
+  const percent = change * 100;
+  const sign = percent > 0 ? '+' : ''; 
+  return `${sign}${percent.toFixed(2)}%`;
 }
 
-function formatPrice(p: number): string {
-  return p.toFixed(2);
+// Helper to match your CSS td color classes
+function getChangeClass(change: number): string {
+  if (change > 0) return 'up';
+  if (change < 0) return 'down';
+  return ''; 
 }
 
-function formatChange(c: number): string {
-  const pct = (c * 100).toFixed(2);
-  return (c >= 0 ? '+' : '') + pct + '%';
+// Helper to trigger your CSS row flash animations
+function getFlashClass(change: number): string {
+  if (change > 0) return 'flash-up';
+  if (change < 0) return 'flash-down';
+  return '';
 }
 
-function formatVolume(v: number): string {
-  return v.toLocaleString('en-US');
+// HTMX 2.x Broadcast
+export function renderRowV2(tick: StockTick): string {
+  const changeClass = getChangeClass(tick.change);
+  const flashClass = getFlashClass(tick.change); // Add flash to live updates
+  
+  return `
+    <tr id="row-${tick.symbol}" hx-swap-oob="true" class="${flashClass}">
+      <td class="symbol">${tick.symbol}</td>
+      <td class="price">${tick.price.toFixed(2)}</td>
+      <td class="${changeClass}">${formatChange(tick.change)}</td>
+      <td class="volume">${tick.volume.toLocaleString()}</td>
+    </tr>
+  `;
 }
 
-export function renderRow(tick: StockTick): string {
-  const dir = tick.change >= 0 ? 'up' : 'down';
-  return `<tr id="row-${esc(tick.symbol)}" hx-swap-oob="true">` +
-    `<td class="symbol">${esc(tick.symbol)}</td>` +
-    `<td class="price ${dir}">${esc(formatPrice(tick.price))}</td>` +
-    `<td class="change ${dir}">${esc(formatChange(tick.change))}</td>` +
-    `<td class="volume">${esc(formatVolume(tick.volume))}</td>` +
-    `</tr>`;
+// HTMX 4.x Broadcast
+export function renderRowV4(tick: StockTick): string {
+  const changeClass = getChangeClass(tick.change);
+  const flashClass = getFlashClass(tick.change); // Add flash to live updates
+  
+  return `
+    <hx-partial hx-target="#row-${tick.symbol}" hx-swap="outerHTML">
+      <tr id="row-${tick.symbol}" class="${flashClass}">
+        <td class="symbol">${tick.symbol}</td>
+        <td class="price">${tick.price.toFixed(2)}</td>
+        <td class="${changeClass}">${formatChange(tick.change)}</td>
+        <td class="volume">${tick.volume.toLocaleString()}</td>
+      </tr>
+    </hx-partial>
+  `;
 }
 
-export function renderFullTable(stocks: StockState[]): string {
-  const rows = stocks.map(s => {
-    const dir = s.price >= s.open ? 'up' : 'down';
-    const change = s.open > 0 ? (s.price - s.open) / s.open : 0;
-    return `<tr id="row-${esc(s.symbol)}">` +
-      `<td class="symbol">${esc(s.symbol)}</td>` +
-      `<td class="price ${dir}">${esc(formatPrice(s.price))}</td>` +
-      `<td class="change ${dir}">${esc(formatChange(change))}</td>` +
-      `<td class="volume">${esc(formatVolume(s.volume))}</td>` +
-      `</tr>`;
-  });
-  return rows.join('');
+// Initial HTTP Page Load
+export function renderFullTable(ticks: StockTick[]): string {
+  return ticks.map(tick => {
+    const changeClass = getChangeClass(tick.change);
+    
+    // We intentionally DO NOT add the flashClass here, 
+    // so the whole table doesn't blink like crazy on initial load!
+    return `
+      <tr id="row-${tick.symbol}">
+        <td class="symbol">${tick.symbol}</td>
+        <td class="price">${tick.price.toFixed(2)}</td>
+        <td class="${changeClass}">${formatChange(tick.change)}</td>
+        <td class="volume">${tick.volume.toLocaleString()}</td>
+      </tr>
+    `;
+  }).join('');
 }

@@ -1,12 +1,14 @@
 import express, { Request, Response, NextFunction } from 'express';
-import { createServer } from 'http';
+import { createServer, IncomingMessage } from 'http';
 import { WebSocketServer } from 'ws';
 import { TickerEngine } from './ticker-engine.js';
 import { HdaBroadcaster } from './hda-broadcaster.js';
 import { SpaBroadcaster } from './spa-broadcaster.js';
+import { SseBroadcaster } from './sse-broadcaster.js';
+import { SseRowBroadcaster } from './sse-row-broadcaster.js';
 import { createWsRouter } from './ws-router.js';
 import { registry, tickDurationMs } from './metrics.js';
-import { renderFullTable } from './html-renderer.js';
+import { renderFullTable, renderRowV2, renderRowV4 } from './html-renderer.js';
 
 const APP_PORT = parseInt(process.env.APP_PORT ?? '3000', 10);
 const METRICS_PORT = parseInt(process.env.METRICS_PORT ?? '9091', 10);
@@ -23,22 +25,40 @@ app.use((_req: Request, res: Response, next: NextFunction) => {
 });
 
 const httpServer = createServer(app);
-const wss = new WebSocketServer({ server: httpServer, handleProtocols: (protocols) => {
-  if (protocols.has('hda-ticker')) return 'hda-ticker';
-  if (protocols.has('spa-ticker')) return 'spa-ticker';
-  return false;
-}});
+const wss = new WebSocketServer({ 
+  server: httpServer, 
+  handleProtocols: (protocols: Set<string>, req: IncomingMessage) => {
+    if (protocols.has('hda-ticker')) return 'hda-ticker';
+    if (protocols.has('spa-ticker')) return 'spa-ticker';
+    // Allow htmx WS extension connections (both old and new routes)
+    if (protocols.size === 0 && (req.url === '/ws' || req.url === '/ws/beta' || req.url === '/ws/v2' || req.url === '/ws/v4')) return '';
+    return false;
+  }
+});
 
 const engine = new TickerEngine(STOCK_COUNT, UPDATE_INTERVAL_MS, VOLATILITY, DRIFT);
-const hda = new HdaBroadcaster();
-const spa = new SpaBroadcaster();
 
-createWsRouter(wss, hda, spa);
+// Initialize both broadcasters with their specific renderers and metric labels
+const hdaV2 = new HdaBroadcaster(renderRowV2, 'hda-v2');
+const hdaV4 = new HdaBroadcaster(renderRowV4, 'hda-v4');
+
+const spa = new SpaBroadcaster();
+const sse = new SseBroadcaster();
+const sseRows = new SseRowBroadcaster();
+
+// Wire both HDA broadcasters into the router
+createWsRouter(wss, hdaV2, hdaV4, spa);
 
 engine.on('tick', (ticks) => {
   const t0 = performance.now();
-  hda.broadcast(ticks);
+  
+  // Broadcast to both HTMX endpoints
+  hdaV2.broadcast(ticks);
+  hdaV4.broadcast(ticks);
+  
   spa.broadcast(ticks);
+  sse.broadcast(ticks);
+  sseRows.broadcast(ticks);
   tickDurationMs.observe(performance.now() - t0);
 });
 
@@ -55,6 +75,14 @@ app.get('/api/snapshot/html', (_req: Request, res: Response) => {
   const stocks = engine.snapshot();
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.send(renderFullTable(stocks));
+});
+
+app.get('/api/sse', (_req: Request, res: Response) => {
+  sse.addClient(res);
+});
+
+app.get('/api/sse/rows', (_req: Request, res: Response) => {
+  sseRows.addClient(res);
 });
 
 const metricsApp = express();

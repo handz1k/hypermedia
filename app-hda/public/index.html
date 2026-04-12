@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Stock Ticker — HDA (HTMX)</title>
+  <title>Stock Ticker — HDA (HTMX 4 Beta)</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
   <header>
     <h1>Stock Ticker</h1>
-    <span class="badge">HDA · HTMX</span>
+    <span class="badge">HDA · HTMX 4</span>
     <div id="status">
       <span id="status-dot"></span>
       <span id="status-text">Connecting…</span>
@@ -17,31 +17,47 @@
   </header>
 
   <main>
-    <div class="table-wrap">
-      <table id="stock-table">
-        <thead>
-          <tr>
-            <th>Symbol</th>
-            <th>Price</th>
-            <th>Change</th>
-            <th>Volume</th>
-          </tr>
-        </thead>
-        <tbody id="stocks">
-          <!-- Populated by ws-connect.js via GET /api/snapshot/html -->
-        </tbody>
-      </table>
+    <div hx-ext="ws" hx-ws:connect="ws://localhost:3000/ws/v4" id="ws-root">
+      <div class="table-wrap">
+        <table id="stock-table">
+          <thead>
+            <tr>
+              <th>Symbol</th>
+              <th>Price</th>
+              <th>Change</th>
+              <th>Volume</th>
+            </tr>
+          </thead>
+          <tbody id="stocks"
+                 hx-get="/api/snapshot/html"
+                 hx-trigger="load"
+                 hx-swap="innerHTML">
+            </tbody>
+        </table>
+      </div>
     </div>
   </main>
 
-  <!--
-    Hidden sink: incoming WS HTML snippets are injected here so that
-    HTMX's hx-swap-oob mechanism can locate and replace the target rows.
-    The sink itself is never visible to the user.
-  -->
-  <div id="oob-sink" hidden aria-hidden="true"></div>
+  <script src="https://cdn.jsdelivr.net/npm/htmx.org@next/dist/htmx.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/htmx.org@next/dist/ext/hx-ws.js"></script>
 
-  <script src="/htmx.min.js"></script>
-  <script src="/ws-connect.js"></script>
+  <script>
+    const dot  = document.getElementById('status-dot');
+    const text = document.getElementById('status-text');
+    
+    // HTMX 4 standard WS lifecycle events
+    document.addEventListener('htmx:after:ws:connection', () => { 
+      dot.className = 'connected';    
+      text.textContent = 'Live'; 
+    });
+    document.addEventListener('htmx:ws:close', () => { 
+      dot.className = 'disconnected'; 
+      text.textContent = 'Disconnected'; 
+    });
+    document.addEventListener('htmx:before:ws:connection', () => { 
+      dot.className = '';             
+      text.textContent = 'Connecting…'; 
+    });
+  </script>
 </body>
 </html>

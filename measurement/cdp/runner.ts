@@ -6,8 +6,10 @@ import { takeHeapSnapshot, type HeapSnapshot } from './utils/heap-collector.js';
 import { collectPaintMetrics, type PaintMetrics } from './utils/paint-collector.js';
 import { writeReport } from './utils/report.js';
 
+export type AppLabel = 'hda-stable' | 'spa' | 'hda-beta' | 'hda-sse';
+
 export interface MeasurementResult {
-  app: 'hda' | 'spa';
+  app: AppLabel;
   url: string;
   startedAt: string;
   fps: FpsResult;
@@ -15,17 +17,16 @@ export interface MeasurementResult {
   paint: PaintMetrics;
 }
 
-const HDA_URL           = process.env.CDP_HDA_URL           ?? 'http://localhost:8080';
-const SPA_URL           = process.env.CDP_SPA_URL           ?? 'http://localhost:8081';
+const HDA_STABLE_URL    = process.env.CDP_HDA_STABLE_URL ?? 'http://localhost:8080';
+const SPA_URL           = process.env.CDP_SPA_URL        ?? 'http://localhost:8081';
+const HDA_BETA_URL      = process.env.CDP_HDA_BETA_URL   ?? 'http://localhost:8082';
+const HDA_SSE_URL       = process.env.CDP_HDA_SSE_URL    ?? 'http://localhost:8083';
 const DURATION_MS       = parseInt(process.env.CDP_DURATION_SECONDS ?? '60', 10) * 1000;
 const WARMUP_MS         = 5_000;
 const HEAP_INTERVAL_MS  = Math.floor(DURATION_MS / 2);
 const OUT_DIR           = join(new URL('.', import.meta.url).pathname, '..', 'results');
 
-async function measureApp(
-  app: 'hda' | 'spa',
-  url: string,
-): Promise<MeasurementResult> {
+async function measureApp(app: AppLabel, url: string): Promise<MeasurementResult> {
   console.log(`\n[${app.toUpperCase()}] Starting measurement at ${url}`);
 
   const browser = await puppeteer.launch({
@@ -82,14 +83,23 @@ async function measureApp(
 async function main(): Promise<void> {
   mkdirSync(OUT_DIR, { recursive: true });
 
-  const hdaResult = await measureApp('hda', HDA_URL);
+  const apps: Array<{ label: AppLabel; url: string }> = [
+    { label: 'hda-stable', url: HDA_STABLE_URL },
+    { label: 'spa',        url: SPA_URL        },
+    { label: 'hda-beta',   url: HDA_BETA_URL   },
+    { label: 'hda-sse',    url: HDA_SSE_URL    },
+  ];
 
-  console.log('\nCooldown 10s…');
-  await new Promise(resolve => setTimeout(resolve, 10_000));
+  const results: MeasurementResult[] = [];
+  for (const { label, url } of apps) {
+    results.push(await measureApp(label, url));
+    if (label !== apps[apps.length - 1].label) {
+      console.log('\nCooldown 10s…');
+      await new Promise(resolve => setTimeout(resolve, 10_000));
+    }
+  }
 
-  const spaResult = await measureApp('spa', SPA_URL);
-
-  writeReport([hdaResult, spaResult], OUT_DIR);
+  writeReport(results, OUT_DIR);
   console.log('\nMeasurement complete.');
 }
 

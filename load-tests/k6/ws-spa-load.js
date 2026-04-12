@@ -8,7 +8,7 @@ const msgBytesRecv    = new Trend('spa_msg_bytes_received',    false);
 const totalMsgsRecv   = new Counter('spa_total_messages_received');
 const activeConns     = new Gauge('spa_active_connections');
 
-const TARGET_URL = __ENV.SPA_WS_URL || 'ws://localhost:3000';
+const TARGET_URL = __ENV.SPA_WS_URL || 'ws://localhost:3000/ws';
 const UPDATE_INTERVAL_MS = parseInt(__ENV.UPDATE_INTERVAL_MS || '250', 10);
 
 export const options = {

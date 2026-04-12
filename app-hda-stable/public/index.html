@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stock Ticker — HDA Stable (HTMX 2.x)</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Stock Ticker</h1>
+    <span class="badge">HDA · HTMX 2.x</span>
+    <div id="status">
+      <span id="status-dot"></span>
+      <span id="status-text">Connecting…</span>
+    </div>
+  </header>
+
+  <main>
+    <!--
+      htmx-ext-ws (2.x): hx-ext="ws" activates the extension;
+      ws-connect="/ws" opens the WebSocket. Incoming HTML carries
+      hx-swap-oob="true" so htmx 2.x patches each <tr id="row-*"> in place.
+
+      hx-get + hx-trigger="load" on <tbody> fetches the initial snapshot
+      declaratively — no custom JS needed.
+    -->
+    <div hx-ext="ws" ws-connect="ws://localhost:3000/ws/v2" id="ws-root">
+      <div class="table-wrap">
+        <table id="stock-table">
+          <thead>
+            <tr>
+              <th>Symbol</th>
+              <th>Price</th>
+              <th>Change</th>
+              <th>Volume</th>
+            </tr>
+          </thead>
+          <tbody id="stocks"
+                 hx-get="/api/snapshot/html"
+                 hx-trigger="load"
+                 hx-swap="innerHTML">
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script src="/htmx.min.js"></script>
+  <script src="/ws.js"></script>
+  <script>
+    const dot  = document.getElementById('status-dot');
+    const text = document.getElementById('status-text');
+    // htmx-ext-ws 2.x event names
+    document.addEventListener('htmx:wsOpen',       () => { dot.className = 'connected';    text.textContent = 'Live'; });
+    document.addEventListener('htmx:wsClose',      () => { dot.className = 'disconnected'; text.textContent = 'Disconnected'; });
+    document.addEventListener('htmx:wsConnecting', () => { dot.className = '';             text.textContent = 'Connecting…'; });
+  </script>
+</body>
+</html>

@@ -1,22 +1,28 @@
 import WebSocket from 'ws';
 import { StockTick } from './types.js';
-import { renderRow } from './html-renderer.js';
+// Removed: import { renderRow } from './html-renderer.js'; 
 import { wsConnections, messagesSent, bytesTotal, messageSizeBytes, encodeDurationMs } from './metrics.js';
 
 export class HdaBroadcaster {
   private clients: Set<WebSocket> = new Set();
 
+  // Accept the render function and metric label dynamically
+  constructor(
+    private renderFn: (tick: StockTick) => string,
+    private metricLabel: string
+  ) {}
+
   addClient(ws: WebSocket): void {
     this.clients.add(ws);
-    wsConnections.labels('hda').set(this.clients.size);
+    wsConnections.labels(this.metricLabel).set(this.clients.size);
 
     ws.on('close', () => {
       this.clients.delete(ws);
-      wsConnections.labels('hda').set(this.clients.size);
+      wsConnections.labels(this.metricLabel).set(this.clients.size);
     });
     ws.on('error', () => {
       this.clients.delete(ws);
-      wsConnections.labels('hda').set(this.clients.size);
+      wsConnections.labels(this.metricLabel).set(this.clients.size);
     });
   }
 
@@ -24,19 +30,20 @@ export class HdaBroadcaster {
     if (this.clients.size === 0) return;
 
     const t0 = performance.now();
-    const html = ticks.map(renderRow).join('');
+    // Use the specific render function for this instance
+    const html = ticks.map(this.renderFn).join('');
     const elapsed = performance.now() - t0;
-    encodeDurationMs.labels('hda').observe(elapsed);
+    encodeDurationMs.labels(this.metricLabel).observe(elapsed);
 
     const payload = Buffer.from(html, 'utf8');
     const byteLen = payload.byteLength;
-    messageSizeBytes.labels('hda').observe(byteLen);
+    messageSizeBytes.labels(this.metricLabel).observe(byteLen);
 
     for (const client of this.clients) {
       if (client.readyState === WebSocket.OPEN) {
         client.send(html);
-        messagesSent.labels('hda').inc();
-        bytesTotal.labels('hda').inc(byteLen);
+        messagesSent.labels(this.metricLabel).inc();
+        bytesTotal.labels(this.metricLabel).inc(byteLen);
       }
     }
   }

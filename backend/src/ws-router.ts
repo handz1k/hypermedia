@@ -8,7 +8,8 @@ const SPA_PROTOCOL = 'spa-ticker';
 
 export function createWsRouter(
   wss: WebSocketServer,
-  hda: HdaBroadcaster,
+  hdaV2: HdaBroadcaster, 
+  hdaV4: HdaBroadcaster, 
   spa: SpaBroadcaster,
 ): void {
   wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
@@ -16,12 +17,19 @@ export function createWsRouter(
       .split(',')
       .map(p => p.trim());
 
-    if (protocols.includes(HDA_PROTOCOL)) {
-      hda.addClient(ws);
-    } else if (protocols.includes(SPA_PROTOCOL)) {
+    // Protocol-based routing takes priority so spa-ticker on /ws goes to SPA
+    if (protocols.includes(SPA_PROTOCOL)) {
       spa.addClient(ws);
-    } else {
-      ws.close(4000, 'Unknown subprotocol. Use hda-ticker or spa-ticker.');
+    }
+    // Path-based routing for htmx apps (no subprotocol)
+    else if (req.url === '/ws/v4' || req.url === '/ws/beta') {
+      hdaV4.addClient(ws);
+    }
+    else if (req.url === '/ws/v2' || req.url === '/ws' || protocols.includes(HDA_PROTOCOL)) {
+      hdaV2.addClient(ws);
+    }
+    else {
+      ws.close(4000, 'Unknown subprotocol or endpoint.');
     }
   });
 }

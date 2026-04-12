@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stock Ticker — HDA SSE (HTMX 4 Beta)</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Stock Ticker</h1>
+    <span class="badge">HDA · SSE</span>
+    <div id="status">
+      <span id="status-dot"></span>
+      <span id="status-text">Connecting…</span>
+    </div>
+  </header>
+
+  <main>
+    <div class="table-wrap">
+      <table id="stock-table">
+        <thead>
+          <tr>
+            <th>Symbol</th>
+            <th>Price</th>
+            <th>Change</th>
+            <th>Volume</th>
+          </tr>
+        </thead>
+        <tbody id="stocks"
+               hx-get="/api/snapshot/html"
+               hx-trigger="load"
+               hx-swap="innerHTML">
+        </tbody>
+      </table>
+    </div>
+
+    <div id="sse-root"
+         hx-ext="sse"
+         hx-sse:connect="/api/sse/rows"
+         hidden
+         aria-hidden="true">
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/htmx.org@next/dist/htmx.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/htmx.org@next/dist/ext/hx-sse.js"></script>
+  
+  <script>
+    const dot  = document.getElementById('status-dot');
+    const text = document.getElementById('status-text');
+    document.addEventListener('htmx:after:sse:connection',  () => { dot.className = 'connected';    text.textContent = 'Live'; });
+    document.addEventListener('htmx:sse:error',             () => { dot.className = 'disconnected'; text.textContent = 'Disconnected'; });
+    document.addEventListener('htmx:before:sse:connection', () => { dot.className = '';             text.textContent = 'Connecting…'; });
+  </script>
+</body>
+</html>

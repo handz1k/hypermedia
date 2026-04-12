@@ -2,7 +2,7 @@ FROM node:22-alpine AS build
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
-COPY svelte.config.js vite.config.ts index.html ./
+COPY vite.config.ts tsconfig.json index.html ./
 COPY src ./src
 COPY public ./public
 RUN npm run build

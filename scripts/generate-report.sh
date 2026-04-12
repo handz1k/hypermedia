@@ -14,8 +14,8 @@ REPORT="$RUN_DIR/summary.md"
 cat > "$REPORT" <<'HEADER'
 # Measurement Run Summary
 
-| | HDA (HTMX) | SPA (Svelte) |
-|---|---|---|
+| | HDA Stable (htmx 2.x) | SPA | HDA Beta (htmx 4.x WS) | HDA SSE (htmx 4.x SSE) |
+|---|---|---|---|---|
 HEADER
 
 # k6 output is NDJSON — one JSON object per line, not an array.
@@ -23,6 +23,7 @@ HEADER
 if command -v jq &>/dev/null; then
   extract_p95() {
     local file="$1" metric="$2"
+    [ -f "$file" ] || { echo "N/A"; return; }
     jq -rs --arg m "$metric" '
       [ .[] | select(.type=="Point" and .metric==$m) | .data.value ]
       | if length > 0
@@ -33,6 +34,7 @@ if command -v jq &>/dev/null; then
   }
   extract_avg() {
     local file="$1" metric="$2"
+    [ -f "$file" ] || { echo "N/A"; return; }
     jq -rs --arg m "$metric" '
       [ .[] | select(.type=="Point" and .metric==$m) | .data.value ]
       | if length > 0
@@ -42,28 +44,41 @@ if command -v jq &>/dev/null; then
     ' "$file" 2>/dev/null || echo "N/A"
   }
 
-  if [ -f "$RUN_DIR/k6-hda.json" ] && [ -f "$RUN_DIR/k6-spa.json" ]; then
-    echo "| Time-to-first-msg p95 (ms)   | $(extract_p95 "$RUN_DIR/k6-hda.json" hda_time_to_first_msg_ms) | $(extract_p95 "$RUN_DIR/k6-spa.json" spa_time_to_first_msg_ms) |" >> "$REPORT"
-    echo "| Msg interval jitter p95 (ms) | $(extract_p95 "$RUN_DIR/k6-hda.json" hda_msg_interval_ms) | $(extract_p95 "$RUN_DIR/k6-spa.json" spa_msg_interval_ms) |" >> "$REPORT"
-    echo "| Avg message size (bytes)      | $(extract_avg  "$RUN_DIR/k6-hda.json" hda_msg_bytes_received) | $(extract_avg  "$RUN_DIR/k6-spa.json" spa_msg_bytes_received) |" >> "$REPORT"
-  else
-    echo "| k6 results | missing | missing |" >> "$REPORT"
-  fi
+  S_TTFM=$(extract_p95 "$RUN_DIR/k6-hda-stable.json" hda_stable_time_to_first_msg_ms)
+  S_JIT=$(extract_p95  "$RUN_DIR/k6-hda-stable.json" hda_stable_msg_interval_ms)
+  S_SZ=$(extract_avg   "$RUN_DIR/k6-hda-stable.json" hda_stable_msg_bytes_received)
+
+  P_TTFM=$(extract_p95 "$RUN_DIR/k6-spa.json" spa_time_to_first_msg_ms)
+  P_JIT=$(extract_p95  "$RUN_DIR/k6-spa.json" spa_msg_interval_ms)
+  P_SZ=$(extract_avg   "$RUN_DIR/k6-spa.json" spa_msg_bytes_received)
+
+  B_TTFM=$(extract_p95 "$RUN_DIR/k6-hda-beta.json" hda_beta_time_to_first_msg_ms)
+  B_JIT=$(extract_p95  "$RUN_DIR/k6-hda-beta.json" hda_beta_msg_interval_ms)
+  B_SZ=$(extract_avg   "$RUN_DIR/k6-hda-beta.json" hda_beta_msg_bytes_received)
+
+  E_TTFE=$(extract_p95 "$RUN_DIR/k6-hda-sse.json"  sse_time_to_first_event_ms)
+  E_SZ=$(extract_avg   "$RUN_DIR/k6-hda-sse.json"  sse_bytes_received)
+
+  echo "| Time-to-first-msg p95 (ms)   | $S_TTFM | $P_TTFM | $B_TTFM | $E_TTFE (TTFB) |" >> "$REPORT"
+  echo "| Msg interval jitter p95 (ms) | $S_JIT  | $P_JIT  | $B_JIT  | N/A (SSE HTTP) |" >> "$REPORT"
+  echo "| Avg message size (bytes)     | $S_SZ   | $P_SZ   | $B_SZ   | $E_SZ          |" >> "$REPORT"
 else
-  echo "| k6 results | jq not installed | jq not installed |" >> "$REPORT"
+  echo "| k6 results | jq not installed | — | — | — |" >> "$REPORT"
 fi
 
 # CDP results
 if [ -f "$RUN_DIR/cdp-results.csv" ]; then
   printf '\n## Client-Side (CDP)\n\n' >> "$REPORT"
-  echo "| Metric | HDA | SPA |" >> "$REPORT"
-  echo "|---|---|---|" >> "$REPORT"
+  echo "| Metric | HDA Stable | SPA | HDA Beta | HDA SSE |" >> "$REPORT"
+  echo "|---|---|---|---|---|" >> "$REPORT"
 
   for metric in fps_mean fps_p95 heap_used_mb_steady dom_nodes_final layout_count style_recalc_count script_duration_ms task_duration_ms; do
-    HDA_VAL=$(grep "^hda,$metric," "$RUN_DIR/cdp-results.csv" | cut -d',' -f3)
-    SPA_VAL=$(grep "^spa,$metric," "$RUN_DIR/cdp-results.csv" | cut -d',' -f3)
+    V_STABLE=$(grep "^hda-stable,$metric," "$RUN_DIR/cdp-results.csv" 2>/dev/null | cut -d',' -f3)
+    V_SPA=$(grep    "^spa,$metric,"        "$RUN_DIR/cdp-results.csv" 2>/dev/null | cut -d',' -f3)
+    V_BETA=$(grep   "^hda-beta,$metric,"   "$RUN_DIR/cdp-results.csv" 2>/dev/null | cut -d',' -f3)
+    V_SSE=$(grep    "^hda-sse,$metric,"    "$RUN_DIR/cdp-results.csv" 2>/dev/null | cut -d',' -f3)
     LABEL=$(echo "$metric" | tr '_' ' ')
-    echo "| $LABEL | ${HDA_VAL:-N/A} | ${SPA_VAL:-N/A} |" >> "$REPORT"
+    echo "| $LABEL | ${V_STABLE:-N/A} | ${V_SPA:-N/A} | ${V_BETA:-N/A} | ${V_SSE:-N/A} |" >> "$REPORT"
   done
 fi
 
